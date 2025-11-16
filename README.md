@@ -16,7 +16,7 @@ Query Parameter:
 
 Example Request
 ---------------
-
+'''
 import requests
 
 response = requests.get(
@@ -25,11 +25,11 @@ response = requests.get(
 )
 
 print(response.json())
-
+'''
 
 Example Response
 ----------------
-
+'''
 {
   "genre": "rock",
   "tracks": [
@@ -41,13 +41,14 @@ Example Response
     }
   ]
 }
-
+'''
 
 How to Receive/Use the Data
 -------------------------------
 
 The microservice returns in JSON format
 
+'''
 import requests
 
 def get_recommendations(genre):
@@ -61,7 +62,7 @@ def get_recommendations(genre):
     return data
 
 get_recommendations("(genre)")
-
+'''
 
 Communication Contract
 ----------------------
@@ -70,6 +71,7 @@ Client sends
 GET /recommendations?genre=<genre> (like the above function call)
 
 Microservice returns
+'''
 {
   "genre": "<string>",
   "tracks": [
@@ -81,3 +83,4 @@ Microservice returns
     }
   ]
 }
+'''
