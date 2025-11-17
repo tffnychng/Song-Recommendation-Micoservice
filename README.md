@@ -1,86 +1,70 @@
 Spotify Genre Recommendation Microservice
 
-This microservice returns Spotify song recommendations based on a requested genre.
-Client programs make a request with a genre (ex: "rock", "pop", "lo-fi") and receives a list of tracks that match that genre.
+This microservice returns Spotify song recommendations based on a requested genre and returns song information based on a requested song.
+Client programs make a request with a type mood and a mood from a list of option (ex: "rock", "pop", "lo-fi") receives a list of tracks that match that genre. A program that makes a request with type song, a song name, an artist name receives information about the song.
 
-Endpoint
---------
-
-GET /recommendations
-
-Returns a list of recommended tracks.
-
-Query Parameter:
-- genre (string): The desired music genre to generate with.
-
-
-Example Request
+How to Request Data
 ---------------
 ```
-import requests
+import zmq
 
-response = requests.get(
-    "http://localhost:5000/recommendations",
-    params={"genre": "rock"}
-)
+context = zmq.Context()
+socket = context.socket(zmq.REQ)
+socket.connect("tcp://localhost:5555")
 
-print(response.json())
+#request a mood
+socket.send_json({"type": "mood", "mood": "happy"})
+
+#request a song
+socket.send_json({"type": "song", "song": "Last Christmas", "artist": "Wham"})
+
 ```
 
 Example Response
 ----------------
 ```
+#request a mood
+
 {
-  "genre": "rock",
-  "tracks": [
-    {
-      "name": "Bohemian Rhapsody",
-      "artist": "Queen",
-      "image_url": "https://i.scdn.co/image/example",
-      "spotify_url": "https://open.spotify.com/track/example"
-    }
-  ]
+    'playlist': [
+        {
+            'name': 'No One Noticed',
+            'artist': 'The Marías',
+            'album': 'Submarine',
+            'image': 'https://i.scdn.co/image/ab67616d0000b273b19ac38a59cddd80da3cedcb',
+            'url': 'https://open.spotify.com/track/3siwsiaEoU4Kuuc9WKMUy5'
+        }, ...
+    ]
 }
+
+#request a song
+
+{
+    'playlist': [
+        {
+            'name': 'Stars',
+            'artist': 'PinkPantheress',
+            'album': 'Fancy That',
+            'genres': ['bedroom pop'],
+            'image': 'https://i.scdn.co/image/ab67616d0000b273dd4912edb4982f53a381b98e'
+        }
+    ]
+}
+
 ```
 
 How to Receive/Use the Data
 -------------------------------
 
-The microservice returns in JSON format
+The microservice returns in JSON format through ZMQ
 
 ```
-import requests
-
-def get_recommendations(genre):
-    url = "http://localhost:5000/recommendations"
-    response = requests.get(url, params={"genre": genre})
-    data = response.json()
-
-    for track in data["tracks"]:
-        print(track["name"], "-", track["artist"])
-
-    return data
-
-get_recommendations("(genre)")
+response = socket.recv_json()
+for track in response["playlist"]:
+    print(f"Song: {track['name']}\nArtist: {track['artist']}\nAlbum:{track['album']}\n")
 ```
 
-Communication Contract
-----------------------
 
-Client sends
-GET /recommendations?genre=<genre> (like the above function call)
-
-Microservice returns
-```
-{
-  "genre": "<string>",
-  "tracks": [
-    {
-      "name": "<string>",
-      "artist": "<string>",
-      "image_url": "<string or null>",
-      "spotify_url": "<string>"
-    }
-  ]
-}
-```
+UML Sequence Diagram
+--------------------
+![UML Diagram](https://github.com/user-attachments/assets/ec6bf509-1c9c-4b46-b260-ed91878fbee1)
