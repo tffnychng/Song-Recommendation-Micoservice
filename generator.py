@@ -40,7 +40,7 @@ mood_genres = {
 }
 
 # Playlist generator
-def get_genre(mood):
+def get_by_mood(mood):
     genres = mood_genres.get(mood, ["pop"])
     unique_tracks = {}
 
@@ -64,6 +64,23 @@ def get_genre(mood):
 
     return list(unique_tracks.values())
 
+def get_song_info(song, artist):
+    results = sp.search(q=f'track:"{song}" artist:"{artist}"', type="track", limit=1)
+    
+    if not results["tracks"]["items"]:
+            return {"error": "Song not found in Spotify database"}
+    
+    item = results["tracks"]["items"][0]
+    artist_info = sp.artist(item["artists"][0]["id"])
+
+    return [{
+            "name": item["name"],
+            "artist": item["artists"][0]["name"],
+            "album": item["album"]["name"],
+            "genres": artist_info["genres"],
+            "image": item["album"]["images"][0]["url"] if item["album"]["images"] else None,
+        }]      
+
 # ZeroMQ setup
 context = zmq.Context()
 socket = context.socket(zmq.REP)
@@ -73,10 +90,16 @@ print("Service running..")
 
 while True:
     message = socket.recv_json()
-    mood = message.get("mood")
+    type = message.get("type")
 
-    print(f"Received request for mood: {mood}")
-
-    playlist = get_genre(mood)
+    if type == "mood":
+        mood = message.get("mood")
+        print(f"Received request for mood: {mood}")
+        playlist = get_by_mood(mood)
+    elif type == "song":
+        song = message.get("song")
+        artist = message.get("artist")
+        print(f"Received request for song: {song} by {artist}")
+        playlist = get_song_info(song,artist)
 
     socket.send_json({"playlist": playlist})
