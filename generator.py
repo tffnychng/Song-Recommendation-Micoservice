@@ -90,13 +90,13 @@ print("Service running..")
 
 while True:
     message = socket.recv_json()
-    type = message.get("type")
+    request_type = message.get("type")
 
-    if type == "mood":
+    if request_type == "mood":
         mood = message.get("mood")
         print(f"Received request for mood: {mood}")
         playlist = get_by_mood(mood)
-    elif type == "song":
+    elif request_type == "song":
         song = message.get("song")
         artist = message.get("artist")
         print(f"Received request for song: {song} by {artist}")
